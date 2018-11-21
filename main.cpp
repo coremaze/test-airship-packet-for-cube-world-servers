@@ -15,10 +15,10 @@ public:
     unsigned long long int pos_x = 550361296274;
     unsigned long long int pos_y = 550355927040;
     unsigned long long int pos_z = 13039826;
-    float vel_x = -9.317968368530273;
+    float vel_x = 0.0;
     float vel_y = 0.0;
-    float vel_z = -3.6298022270202637;
-    float rot = 270.0030517578125;
+    float vel_z = 0.0;
+    float rot = 270.0;
     unsigned long long int station_x = 550358024192;
     unsigned long long int station_y = 550355927040;
     unsigned long long int station_z = 11730944;
@@ -32,11 +32,6 @@ public:
     uint8_t unk_char2 = 0x0A;
     uint8_t unk_char3 = 0x4D;
     unsigned int b2 = 0;
-    Airship(){
-
-
-
-    }
 };
 
 Airship airship;
@@ -54,21 +49,27 @@ void SendAirshipPacket(SOCKET socket){
     char buf[pkt_size] = {0};
 
     unsigned int current_time = timeGetTime();
-    unsigned int time_delta = current_time - time;
+    unsigned int time_delta_milliseconds = current_time - time;
+
+    float BLOCKS_PER_SECOND = 10.0;
+    float BLOCKS_PER_MILLISECOND = BLOCKS_PER_SECOND / 1000;
+    float UNITS_PER_BLOCK = 65536.0;
 
     if ((current_time-initial_time) > 90000){
-        airship.pos_x += 1500 * time_delta;
-//        airship.pos_y += 100 * time_delta;
-//        airship.pos_z += 100 * time_delta;
-    }
+        airship.pos_x += (long long int)(UNITS_PER_BLOCK * BLOCKS_PER_MILLISECOND * (float)time_delta_milliseconds);
+        airship.vel_x = BLOCKS_PER_SECOND;
+        airship.vel_y = 0;
+        airship.vel_z = 0;
 
-        //airship.rot += 0.01 * time_delta;
+    }
 
     time = current_time;
 
     memcpy(buf, (char*)&pid, 4);
     memcpy(buf+4, (char*)&len, 4);
     memcpy(buf+8, (char*)&airship, 0x78);
+
+
 
 
 //    char buf[pkt_size] = {0x03, 0x00, 0x00, 0x00, //pid
@@ -135,7 +136,6 @@ extern "C" no_shenanigans bool APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwRea
         case DLL_PROCESS_ATTACH:
             time = timeGetTime();
             initial_time = time;
-            airship = Airship();
             airship.pos_z += 65536 * 150;
             PacketsInit();
 
